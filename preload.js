@@ -272,6 +272,15 @@ window.addEventListener('DOMContentLoaded', () => {
       return false;
     }
 
+    // Проверяем: есть ли у элемента или его родителя onclick-обработчик (кнопка/ссылка)?
+    // Для таких элементов свайп-жесты нас не интересуют, 
+    // но touch-эмуляцию всё равно делаем — просто не блокируем нативный click.
+    // Эта функция нужна для защиты от ghost-click: если пользователь просто нажал,
+    // а не свайпнул — мы вообще не диспатчим touch, оставляем нативный click.
+    function isSimpleClick(dx, dy) {
+      return Math.abs(dx) < 8 && Math.abs(dy) < 8;
+    }
+
     document.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return; // только левая кнопка
       if (isExcluded(e.target)) return;
@@ -301,6 +310,22 @@ window.addEventListener('DOMContentLoaded', () => {
       if (!active) return;
       active = false;
       document.body.classList.remove('mouse-dragging');
+      // Если движения почти не было — это простой клик.
+      // Не диспатчим touchend чтобы браузер не синтезировал ghost click
+      // поверх нативного click события (double-fire проблема).
+      if (!movedEnough) {
+        // Простой клик — touchstart тоже не нужен был, но мы его уже отправили.
+        // Посылаем touchcancel вместо touchend чтобы отменить цепочку без click.
+        try {
+          const touch = makeTouch(e);
+          const evt = new TouchEvent('touchcancel', {
+            bubbles: true, cancelable: true,
+            touches: [], targetTouches: [], changedTouches: [touch],
+          });
+          e.target.dispatchEvent(evt);
+        } catch(_) {}
+        return;
+      }
       dispatch(e.target, 'touchend', e);
     }
 

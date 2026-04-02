@@ -1867,6 +1867,11 @@ body.glass-mode #msg-fab-menu button {
   box-shadow: inset 0 1.5px 0 rgba(255,255,255,.40), 0 4px 16px rgba(0,0,0,.28) !important;
   transition: transform 0.2s var(--gspring) !important;
 }
+/* ── FAB иконки — переключение без innerHTML manipulation ── */
+#msg-fab-btn .fab-icon-pencil { opacity:1; transform:scale(1) rotate(0deg); }
+#msg-fab-btn .fab-icon-close  { opacity:0; transform:scale(.6) rotate(-45deg); }
+#msg-fab-btn[data-fab-open] .fab-icon-pencil { opacity:0; transform:scale(.6) rotate(45deg); }
+#msg-fab-btn[data-fab-open] .fab-icon-close  { opacity:1; transform:scale(1) rotate(0deg); }
 body.glass-mode #msg-fab-menu button:active {
   transform: scale(0.90) !important;
 }
@@ -2144,6 +2149,7 @@ body.glass-mode #s-sched .pair-card {
 .chess-promo{display:none;gap:8px;margin-top:8px;justify-content:center}
 .chess-promo-btn{font-size:32px;background:var(--surface2);border:2px solid var(--accent);border-radius:10px;padding:6px 10px;cursor:pointer;transition:transform .1s}
 .chess-promo-btn:active{transform:scale(.9)}
+.chess-last-move{background:rgba(100,200,100,.32)!important}
 /* ── Tetris controls ── */
 .tet-controls{display:flex;gap:8px;margin-top:12px;align-items:center}
 .tet-btn{background:var(--surface2);border:1.5px solid var(--surface3);border-radius:10px;color:var(--text);font-size:16px;width:50px;height:46px;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;flex-shrink:0;transition:background .1s,transform .1s}
@@ -4056,9 +4062,12 @@ html.notch-off #s-login {
         </button>
       </div>
     </div>
-    <button id="msg-fab-btn" onclick="msgFabToggle()"
-      style="width:56px;height:56px;border-radius:50%;background:var(--accent);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--btn-text,#fff);box-shadow:0 4px 16px rgba(0,0,0,.4);transition:transform .18s cubic-bezier(.34,1.3,.64,1);-webkit-tap-highlight-color:transparent">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="pointer-events:none"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+    <button id="msg-fab-btn" onclick="msgFabToggle(event)"
+      style="width:56px;height:56px;border-radius:50%;background:var(--accent);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--btn-text,#fff);box-shadow:0 4px 16px rgba(0,0,0,.4);transition:transform .2s cubic-bezier(.34,1.3,.64,1),background .2s;-webkit-tap-highlight-color:transparent;position:relative;overflow:hidden">
+      <!-- Иконка карандаша — видна когда закрыто (data-fab-open отсутствует) -->
+      <svg class="fab-icon-pencil" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="pointer-events:none;transition:opacity .15s,transform .15s;position:absolute"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+      <!-- Иконка закрытия — видна когда открыто -->
+      <svg class="fab-icon-close" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="pointer-events:none;transition:opacity .15s,transform .15s;position:absolute;opacity:0;transform:rotate(-45deg) scale(.7)"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
     </button>
   </div>
 </div>
@@ -4369,6 +4378,16 @@ html.notch-off #s-login {
           <div class="egg-card-name">Змейка</div>
           <div class="egg-card-desc">Ешь, расти, не врезайся в себя</div>
           <div class="egg-card-badge">v1.6.0 • свайп / d-pad</div>
+        </div>
+        <div class="egg-card-arrow">›</div>
+      </div>
+
+      <div class="egg-card" onclick="eggStartGame('snake2')">
+        <div class="egg-card-icon">🌊</div>
+        <div class="egg-card-body">
+          <div class="egg-card-name">Змейка Плюс</div>
+          <div class="egg-card-desc">Плавное движение без клеток — новое ощущение</div>
+          <div class="egg-card-badge egg-card-new">v1.0.0 ✦ НОВАЯ</div>
         </div>
         <div class="egg-card-arrow">›</div>
       </div>
@@ -4800,6 +4819,30 @@ html.notch-off #s-login {
     <div class="chess-promo" id="chess-promo"></div>
     <div class="chess-status" id="chess-status">Ваш ход — белые ♔</div>
     <button class="btn btn-surface3" style="width:auto;padding:9px 22px;margin-top:10px;font-size:13px" onclick="chessRestart()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Заново</button>
+  </div>
+
+  <!-- Змейка Плюс (плавная) -->
+  <div id="egg-snake2" class="egg-game" style="display:none">
+    <div class="egg-game-title">🌊 Змейка Плюс</div>
+    <div class="diff-picker">
+      <button class="diff-btn" onclick="s2Difficulty='easy';updateDiffBtns('snake2');s2Restart()">🐢 Легко</button>
+      <button class="diff-btn active" onclick="s2Difficulty='normal';updateDiffBtns('snake2');s2Restart()">⚡ Нормально</button>
+      <button class="diff-btn" onclick="s2Difficulty='hard';updateDiffBtns('snake2');s2Restart()">💀 Хардкор</button>
+    </div>
+    <div class="egg-score" id="s2-score-label">Счёт: 0 • Рекорд: 0</div>
+    <canvas id="s2-canvas" style="border-radius:14px;border:1.5px solid var(--surface3);margin-top:10px;display:block;touch-action:none" onclick="s2TogglePause()"></canvas>
+    <div class="snake-dpad">
+      <div></div>
+      <div class="dpad-btn" ontouchstart="event.preventDefault();s2Turn(0,-1)" onclick="s2Turn(0,-1)">▲</div>
+      <div></div>
+      <div class="dpad-btn" ontouchstart="event.preventDefault();s2Turn(-1,0)" onclick="s2Turn(-1,0)">◀</div>
+      <div class="dpad-btn" style="background:var(--surface3);font-size:12px;color:var(--muted)" ontouchstart="event.preventDefault();s2TogglePause()" onclick="s2TogglePause()">⏸</div>
+      <div class="dpad-btn" ontouchstart="event.preventDefault();s2Turn(1,0)" onclick="s2Turn(1,0)">▶</div>
+      <div></div>
+      <div class="dpad-btn" ontouchstart="event.preventDefault();s2Turn(0,1)" onclick="s2Turn(0,1)">▼</div>
+      <div></div>
+    </div>
+    <button class="btn btn-surface3" style="width:auto;padding:9px 22px;margin-top:10px;font-size:13px" onclick="s2Restart()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Заново</button>
   </div>
 
 

@@ -11428,43 +11428,52 @@ if (typeof cmdExec !== 'undefined') {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// ✏️ FAB кнопка в мессенджере
+// ✏️ FAB кнопка в мессенджере — переписан чтобы не терять иконку
 // ══════════════════════════════════════════════════════════════════════
 let _fabOpen = false;
-function msgFabToggle() {
-  console.log('[FAB] toggle, currently open:', _fabOpen);
+let _fabLastTs = 0; // защита от двойного срабатывания (ghost click / touch emulator)
+
+function msgFabToggle(e) {
+  // Предотвращаем всплытие чтобы document-обработчик не закрыл только что открытое меню
+  if (e) { e.stopPropagation(); e.stopImmediatePropagation(); }
+
+  // Дебаунс: игнорируем вызовы чаще 200мс (ghost click от mouse→touch эмулятора)
+  const now = Date.now();
+  if (now - _fabLastTs < 200) return;
+  _fabLastTs = now;
+
   const menu = document.getElementById('msg-fab-menu');
   const btn  = document.getElementById('msg-fab-btn');
-  if (!menu) return;
+  if (!menu || !btn) return;
+
   _fabOpen = !_fabOpen;
+
   if (_fabOpen) {
     menu.style.display = 'flex';
-    if (btn) {
-      btn.style.transform = 'rotate(45deg)';
-      // Не используем textContent   twemoji уже заменил emoji на <img>
-      btn.innerHTML = (typeof _emojiImg==="function" ? _emojiImg('❌',20) : '❌');
-    }
-  } else { msgFabClose(); }
+    // Не трогаем innerHTML! Управляем иконкой только через CSS-класс и data-атрибут
+    btn.setAttribute('data-fab-open', '1');
+    btn.style.transform = 'rotate(45deg) scale(1.08)';
+    btn.style.background = 'var(--surface3)';
+  } else {
+    msgFabClose();
+  }
 }
+
 function msgFabClose() {
   const menu = document.getElementById('msg-fab-menu');
   const btn  = document.getElementById('msg-fab-btn');
   _fabOpen = false;
   if (menu) menu.style.display = 'none';
   if (btn) {
+    btn.removeAttribute('data-fab-open');
     btn.style.transform = '';
-    // Используем img twemoji напрямую   надёжнее чем twemoji.parse
-    btn.innerHTML = (typeof _emojiImg==="function" ? _emojiImg('✏️',22) : '✏️');
+    btn.style.background = ''; // вернёт var(--accent) из inline style
   }
 }
-document.addEventListener('click', (e) => {
-  if (!_fabOpen) return;
-  const c = document.getElementById('msg-fab-container');
-  if (c && !c.contains(e.target)) msgFabClose();
-}, { passive: true });
 
-// Дополнительная надёжность: touchstart вне FAB тоже закрывает
-document.addEventListener('touchstart', (e) => {
+// Закрываем при клике ВНЕ контейнера
+// Используем capture=false, passive — так mousedown из эмулятора не помешает
+document.addEventListener('pointerdown', (e) => {
   if (!_fabOpen) return;
   const c = document.getElementById('msg-fab-container');
   if (c && !c.contains(e.target)) msgFabClose();
