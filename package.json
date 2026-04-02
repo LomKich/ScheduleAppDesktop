@@ -1,0 +1,39 @@
+{
+  "name": "scheduleapp-desktop",
+  "version": "4.9.1",
+  "description": "ScheduleApp — desktop version (Electron)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build-win": "electron-builder --win",
+    "build-mac": "electron-builder --mac",
+    "build-linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.scheduleapp.desktop",
+    "productName": "ScheduleApp",
+    "directories": { "output": "dist" },
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "icon.png"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "assets/**/*",
+      "icon.*"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^29.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}
